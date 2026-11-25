@@ -8,7 +8,7 @@ Questa cartella raccoglie gli **Architecture Decision Records (ADR)** e il **Bac
 
 | ID | Titolo | Stato | Priorità | Autori / Fonti |
 | :--- | :--- | :--- | :--- | :--- |
-| **[ADR-0001](./0001-core-architecture.md)** | Architettura Core: Analisi, Montaggio Ritagli Reel e Strategia Hashtag | Proposto | **P1 — Alta** | `@Noobucodonosor` |
+| **[ADR-0001](./0001-core-architecture.md)** | Architettura Core: Analisi, Montaggio Ritagli Reel e Strategia Hashtag | **Accettato** | **P1 — Alta** | `@Noobucodonosor` |
 
 ---
 
@@ -16,27 +16,29 @@ Questa cartella raccoglie gli **Architecture Decision Records (ADR)** e il **Bac
 
 ```mermaid
 flowchart LR
-  subgraph Input["1. Sorgenti & Analisi"]
-    SRC["Ritagli / Clip Sorgente"]
-    ANL["Modulo Analisi & Scoring"]
+  subgraph Input["1. Sorgenti Locali (1080p)"]
+    SRC["Video Sorgente"]
+    SEG["PySceneDetect\n(Tagli & Scene)"]
+    AUD["faster-whisper + FFmpeg astats\n(Trascritto & Energia RMS)"]
   end
 
   subgraph Core["2. Engine instagen"]
-    HASH["Hashtag Tail-Effect Engine\n(Millennium's Bug Strategy)"]
-    EDIT["Assembler / Iniezione Ritagli Reel"]
+    VLM["VLM Scoring (Gemini 2.5 Pro)\nTop-K Ritagli"]
+    HASH["Millennium's Bug Tail-Effect\nCaption SEO (125c) + 3-5 Tag CamelCase"]
+    EDIT["Reel Assembler\nReframing 9:16 (606x1080) + faststart"]
   end
 
-  subgraph Output["3. Destinazione Instagram"]
-    EXP["Export Assistito / Bundle Reel + Caption"]
-    API["Instagram Graph API (Da valutare)"]
+  subgraph Output["3. PublisherPort"]
+    EXP["Fase 1: Export Assistito\n(reel.mp4, cover.jpg, caption_ready.txt, metadata.json)"]
+    API["Fase 2: Instagram Graph API\n(Opzionale)"]
   end
 
-  SRC --> ANL
-  ANL --> HASH
-  ANL --> EDIT
-  HASH --> EDIT
+  SRC --> SEG --> AUD --> VLM
+  VLM --> EDIT
+  VLM --> HASH
+  HASH --> EXP
   EDIT --> EXP
-  EDIT -.->|"Opzionale (ADR-0001)"| API
+  EXP -.->|"Adapter futuro"| API
 ```
 
 ---
@@ -47,5 +49,5 @@ flowchart LR
 
 | Task ID | Issue | ADR | Titolo Task | File Coinvolti | Priorità | Assegnatari |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **TASK-CORE-01** | `#1` | [ADR-0001](./0001-core-architecture.md) | Discovery e decisione canale Instagram (Export assistito vs Graph API) | `docs/adr/0001-core-architecture.md` | **P1 — Alta** | `@Noobucodonosor` |
-| **TASK-CORE-02** | `#2` | [ADR-0001](./0001-core-architecture.md) | Setup scheletro progetto, dipendenze e `.env.example` | `README.md`, `.env.example` | **P1 — Alta** | `@Noobucodonosor` |
+| **TASK-CORE-01** | `#1` *(Chiusa)* | [ADR-0001](./0001-core-architecture.md) | Discovery e decisione canale Instagram (Export assistito vs Graph API) | `docs/adr/0001-core-architecture.md` | **P1 — Alta** | `@Noobucodonosor` |
+| **TASK-CORE-02** | `#2` | [ADR-0001](./0001-core-architecture.md) | Setup scheletro progetto, dipendenze e `.env.example` | `README.md`, `.env.example`, `pyproject.toml`, `src/instagen/` | **P1 — Alta** | `@Noobucodonosor` |

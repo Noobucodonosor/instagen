@@ -9,11 +9,12 @@
 
 - **Nome Progetto:** `instagen`
 - **Repository:** `Noobucodonosor/instagen`
-- **Descrizione Sintetica:** Pipeline di analisi, selezione/montaggio di ritagli video per Instagram Reel con iniezione strategica di hashtag (*Millennium's Bug tail effect*).
-- **Stack Tecnologico:** *(In definizione in [ADR-0001](./docs/adr/0001-core-architecture.md))*
-  - **Core / Pipeline:** Da definire (es. Python + FFmpeg / MoviePy per ritagli e montaggio Reel)
-  - **Analisi & Hashtag Engine:** Da definire (analisi trend/coda lunga hashtag)
-  - **Interfaccia Instagram:** Da decidere in `TASK-CORE-01` (Export assistito vs Instagram Graph API ufficiale)
+- **Descrizione Sintetica:** Pipeline di analisi, selezione/montaggio di ritagli video per Instagram Reel con iniezione strategica di hashtag (*Millennium's Bug tail effect*: Caption SEO + 3–5 hashtag a coda lunga in CamelCase).
+- **Stack Tecnologico:** *(Definito in [ADR-0001](./docs/adr/0001-core-architecture.md))*
+  - **Runtime & CLI:** Python 3.11+ (`pydantic`, `python-dotenv`)
+  - **Video & Audio:** `FFmpeg` / `ffprobe`, `scenedetect[opencv-headless]`, `faster-whisper`, `mediapipe`
+  - **Analisi Multimodale (VLM):** `google-genai` (`gemini-2.5-pro`)
+  - **Interfaccia Instagram:** Fase 1 **Export assistito locale** (`reel.mp4`, `cover.jpg`, `caption_ready.txt`, `metadata.json`) dietro interfaccia `PublisherPort`; Fase 2 **Instagram Graph API ufficiale** (nessuna libreria non ufficiale).
 
 ---
 
@@ -22,7 +23,9 @@
 | File / Cartella | Ruolo |
 | :--- | :--- |
 | [`docs/adr/README.md`](./docs/adr/README.md) | **Indice degli ADR**, diagramma architetturale Mermaid e **Master Task Backlog**. |
-| [`docs/adr/0001-core-architecture.md`](./docs/adr/0001-core-architecture.md) | Architettura Core, pipeline ritagli Reel e strategia hashtag (*Proposto*). |
+| [`docs/adr/0001-core-architecture.md`](./docs/adr/0001-core-architecture.md) | Architettura Core, pipeline ritagli Reel e strategia hashtag (*Accettato*). |
+| `src/instagen/` | Pacchetto Python core (modelli, `PublisherPort`, pipeline analisi/export). |
+| `.env.example` | Template variabili d'ambiente (nessun segreto reale). |
 | `.github/ISSUE_TEMPLATE/` | Template standard per l'apertura di GitHub Issues (`adr_task.yml`, `bug_report.yml`). |
 | `.github/PULL_REQUEST_TEMPLATE.md` | Checklist di PR allineata a ADR, Verification Step e modalità `Show` / `Ask`. |
 | `.github/workflows/adr-pre-release.yml` | Gate CI automatico (file >50 MB, segreti, conformità `AGENTS.md` e `docs/adr/`). |
@@ -51,7 +54,7 @@
 ## 4. Sicurezza & Regole Critiche
 
 - **Mai committare segreti:** Il file `.env` e i database locali (`*.db`, `*.sqlite`) devono restare sempre in `.gitignore`. Ogni sviluppatore usa la propria chiave API locale in `.env`.
-- **Conformità Piattaforma:** Nessuna automazione non autorizzata o scraping aggressivo su Instagram; valutare solo export assistito o Instagram Graph API ufficiale.
+- **Conformità Piattaforma:** Vietate librerie non ufficiali (`instagrapi`), emulation mobile o scraping automatizzato su Instagram. Solo export assistito locale o Instagram Graph API ufficiale.
 - **Verifica Pre-Release:** Prima di generare pacchetti di deploy o fare push di rilascio, esegui:
   ```bash
   python3 ~/.gemini/config/skills/adr-github-methodology/scripts/pre_release_check.py
